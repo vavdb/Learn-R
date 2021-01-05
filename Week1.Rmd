@@ -1,0 +1,38 @@
+---
+title: "Week1"
+output: html_document
+---
+
+```{r}
+# install package if doesnt exist 
+install.packages("data.table")
+library("data.table")
+
+# Reading in data
+quiz_data <- fread('hw1_data.csv')
+
+# Column names of the dataset 
+names(quiz_data)
+
+quiz_data[1:2]
+#quiz_data[152:153]
+tail(quiz_data, 2)
+quiz_data[47]$Ozone
+nrow(subset(quiz_data, is.na(Ozone)))
+
+q <- quiz_data
+#What is the mean of the Ozone column in this dataset? Exclude missing values (coded as NA) from this calculation.
+
+mean(q$Ozone, na.rm = TRUE)
+
+#Extract the subset of rows of the data frame where Ozone values are above 31 and Temp values are above 90. What is the mean of Solar.R in this subset?
+mean(q[Ozone > 31 & Temp > 90]$Solar.R, na.rm = TRUE)
+
+
+#What is the mean of "Temp" when "Month" is equal to 6? 
+mean(q[Month == 6]$Temp, na.rm = TRUE)
+
+#What was the maximum ozone value in the month of May (i.e. Month is equal to 5)?
+max(q[Month == 5]$Ozone, na.rm = TRUE)
+
+```
