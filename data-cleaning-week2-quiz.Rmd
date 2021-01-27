@@ -1,0 +1,128 @@
+---
+title: "data-cleaning-week1-quiz"
+output: html_document
+---
+
+```{r}
+install.packages('tidyverse')
+install.packages('openxlsx')
+install.packages('rjava')
+install.packages('XML')
+library('tidyverse')
+library(XML)
+library(data.table)
+```
+```{r}
+library(httr)
+install.packages("httpuv")
+## // Register app#
+myapp <- oauth_app("github",
+  key = "7d7606fdc29ffc148248",
+  secret = "9065ebb1cdb23145a058f94f702a72641f869043"
+)
+## Get token
+github_token <- oauth2.0_token(oauth_endpoints("github"), myapp)
+gtoken <- config(token = github_token)
+
+## Do request
+req <- GET("https://api.github.com/users/jtleek/repos", gtoken)
+stop_for_status(req)
+
+## Grab content from request
+d <- content(req)
+
+## Find the item containing our requested repo
+df <- lapply(d, function(x) x[x$name == 'datasharing']$created_at)
+
+## I should really remove the NULL ones and keep the only valid one... but for now I have the answer I needed
+
+##Alternative:
+
+# Convert to a data.frame
+gitDF = jsonlite::fromJSON(jsonlite::toJSON(d))
+
+# Subset data.frame
+gitDF[gitDF$name == "datasharing", "created_at"] 
+
+```
+
+
+Question 2
+
+The sqldf package allows for execution of SQL commands on R data frames. We will use the sqldf package to practice the queries we might send with the dbSendQuery command in RMySQL. 
+
+Download the American Community Survey data and load it into an R object called 
+
+1
+
+https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06pid.csv
+
+Which of the following commands will select only the data for the probability weights pwgtp1 with ages less than 50?
+```{r}
+install.packages("sqldf")
+library("sqldf")
+fileUrl = 'https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06pid.csv'
+fileDest = './ss06pid.csv'
+download.file(fileUrl, fileDest)
+acs <- data.table::data.table(read.csv(fileDest))
+q1 <- sqldf("select pwgtp1 from acs where AGEP < 50")
+```
+
+Using the same data frame you created in the previous problem, what is the equivalent function to unique(acs$AGEP)
+``` {r}
+q2 <- sqldf("select distinct AGEP from acs")
+```
+
+
+
+How many characters are in the 10th, 20th, 30th and 100th lines of HTML from this page:
+http://biostat.jhsph.edu/~jleek/contact.html
+(Hint: the nchar() function in R may be helpful)
+```{r}
+url = 'http://biostat.jhsph.edu/~jleek/contact.html'
+data <- readLines(url)
+a <- paste(nchar(data[10]), nchar(data[20]), nchar(data[30]), nchar(data[100]))
+print(a)
+```
+
+
+
+Read this data set into R and report the sum of the numbers in the fourth of the nine columns.
+
+https://d396qusza40orc.cloudfront.net/getdata%2Fwksst8110.for
+
+Original source of the data: http://www.cpc.ncep.noaa.gov/data/indices/wksst8110.for
+
+(Hint this is a fixed width file format)
+```{r}
+library(dplyr)
+fileUrl = 'https://d396qusza40orc.cloudfront.net/getdata%2Fwksst8110.for'
+fileDest = './wksst8110.for'
+download.file(fileUrl, fileDest)
+
+## Can pass url(fileUrl) directly instead of downloading, but wanted a cached file
+w <- c(1, 9, 5, 4, 1, 3, 5, 4, 1, 3, 5, 4, 1, 3, 5, 4, 1, 3)
+colNames <- c("NA", "week", "NA", 
+              "sstNino12", "NA", 
+              "sstaNino12", "NA", 
+              "sstNino3", "NA", 
+              "sstaNino3", "NA", 
+              "sstNino34", "NA", 
+              "sstaNino34", "NA", 
+              "sstNino4", "NA", 
+              "sstaNino4")
+
+data <- read.fwf(fileDest, skip = 4, widths = w)  
+## Remove the empty ones, there must be a better way?
+# data <- data %>% select(-1,-3,-5,-7,-9)
+sum(data[, 4])
+# [1] 28893.3 // This is wrong, because I read the 4th column including the fillers :(
+
+# Remove the empty columns
+data <- data[, grep("^[^NA]", names(d))]
+sum(d[, 4])
+# 32426.7 hurray!
+```
+
+
+

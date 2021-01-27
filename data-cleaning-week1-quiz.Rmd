@@ -1,0 +1,67 @@
+---
+title: "data-cleaning-week1-quiz"
+output: html_document
+---
+
+```{r}
+install.packages('tidyverse')
+library('tidyverse')
+download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06hid.csv", destfile="./getdata_data_ss06hid.csv", method="curl")
+data <- read_csv('getdata_data_ss06hid.csv')
+dv <- sum(!is.na(data$VAL[data$VAL == 24]))
+```
+
+
+```{r}
+install.packages('xlsx')
+install.packages('rjava')
+## Grabbed JAVA from here: https://jdk.java.net/15/
+Sys.setenv(JAVA_HOME='D:/Dev/jdk-15.0.2')
+library(xlsx)
+fileUrl <- 'https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FDATA.gov_NGAP.xlsx'
+fileDest <- './DATA.gov_NGAP.xlsx'
+download.file(fileUrl, destfile=fileDest, method="curl")
+readCols <- 7:15
+readRows <- 18:23
+dat <- read.xlsx(fileDest,sheetIndex=1, colIndex=readCols, rowIndex=readRows )
+sum(dat$Zip*dat$Ext,na.rm=T)
+```
+```{r}
+install.packages('XML')
+Sys.setenv(JAVA_HOME='D:/Dev/jdk-15.0.2')
+library(XML)
+fileUrl <- 'https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Frestaurants.xml'
+fileDest <- './restaurants.xml'
+download.file(fileUrl, destfile=fileDest, method="curl")
+dat <- xmlParse(fileDest)
+rootNode<-xmlRoot(dat)
+xmlName(rootNode)
+names(rootNode)
+s1 <- xpathSApply(rootNode, "//zipcode", xmlValue)
+s2 <- s1[s1 == 21231]
+result <- length(s2)
+```
+
+```{r}
+library(data.table)
+fileUrl <- 'https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06pid.csv'
+fileDest <- './getdata_data_ss06hid.csv'
+download.file(fileUrl, destfile=fileDest, method="curl")
+DT <- fread(fileDest)
+
+# This was all to fast, we'll do each of these 100 times?
+system.time(for(i in 1:1000){DT[,mean(pwgtp15),by=SEX]})
+system.time(for(i in 1:1000){mean(DT[DT$SEX==1,]$pwgtp15);mean(DT[DT$SEX==2,]$pwgtp15)})
+system.time(for(i in 1:1000){sapply(split(DT$pwgtp15,DT$SEX),mean)})
+system.time(for(i in 1:1000){mean(DT$pwgtp15,by=DT$SEX)})
+system.time(for(i in 1:1000){tapply(DT$pwgtp15,DT$SEX,mean)})
+system.time(for(i in 1:1000){rowMeans(DT)[DT$SEX==1];rowMeans(DT)[DT$SEX==2])})
+                                                 
+##This one
+DT[,mean(pwgtp15),by=SEX]
+## because that is how the question was asked, pretty dumb
+
+
+
+```
+
